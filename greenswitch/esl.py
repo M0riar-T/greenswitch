@@ -392,7 +392,24 @@ class OutboundSession(ESLProtocol):
         # TODO(italo): Decide what we need to return.
         #   Returning whole event right now
         return event
+    
+    def endless_playback(self, path, block=True):
+        if not block:
+            self.call_command('endless_playback', path)
+            return
 
+        async_response = gevent.event.AsyncResult()
+        expected_event = "CHANNEL_EXECUTE_COMPLETE"
+        expected_variable = "current_application"
+        expected_variable_value = "endless_playback"
+        self.register_expected_event(expected_event, expected_variable,
+                                     expected_variable_value, async_response)
+        self.call_command('endless_playback', path)
+        event = async_response.get(block=True)
+        # TODO(italo): Decide what we need to return.
+        #   Returning whole event right now
+        return event
+    
     def play_and_get_digits(self, min_digits=None, max_digits=None,
                             max_attempts=None, timeout=None, terminators=None,
                             prompt_file=None, error_file=None, variable=None,
